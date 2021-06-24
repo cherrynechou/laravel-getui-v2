@@ -1,12 +1,12 @@
-<h1 align="center"> laravel-admin-textbox </h1>
+<h1 align="center">laravel-getui-v2 </h1>
 
-<p align="center"> this is extend laravel-admin.</p>
+<p align="center"> this is getui-v2 for laravel.</p>
 
 
 ## Installing
 
 ```shell
-$ composer require cherrynechou/laravel-admin-textbox -vvv
+$ composer require cherrynechou/laravel-getui-v2  -vvv
 ```
 
 ## Usage
