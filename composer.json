@@ -1,0 +1,25 @@
+{
+    "name": "cherrynechou\/laravel-getui-v2",
+    "description": "this is getui-v2 for laravel",
+    "license": "MIT",
+    "authors": [{
+        "name": "CherryneChou",
+        "email": "iboy_2008@163.com"
+    }],
+    "require": {
+        "php": ">=7.2|^8.0",
+        "getuilaboratory/getui-pushapi-php-client-v2":"dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "CherryneChou\\GeTui\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CherryneChou\\GeTui\\GeTuiServiceProvider"
+            ]
+        }
+    }
+}
