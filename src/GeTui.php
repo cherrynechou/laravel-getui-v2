@@ -1,13 +1,8 @@
 <?php
-/**
- * Created by : PhpStorm
- * User: cherrynechou
- * Date: 2021/6/27 0027
- * Time: 19:35
- */
 namespace CherryneChou\GeTui;
 
 use Illuminate\Support\Facades\Cache;
+use CherryneChou\GeTui\Contracts\PushInterface;
 
 require_once dirname(__FILE__) . '/Sdk/GTClient.php';
 require_once dirname(__FILE__) . '/Sdk/request/push/GTPushMessage.php';
@@ -33,12 +28,10 @@ class GeTui implements PushInterface
      */
     protected $config;
 
-
     /**
      * @var mixed
      */
     protected $domain_url = "https://restapi.getui.com";
-
 
     /**
      * @var mixed
@@ -65,7 +58,7 @@ class GeTui implements PushInterface
      * @param array|null $config
      * @throws \Exception
      */
-    public function __construct(array $config = null)
+    public function __construct(array $config = [])
     {
           $this->config = $config;
 
@@ -73,7 +66,7 @@ class GeTui implements PushInterface
               throw new \Exception('config is empty');
           }
 
-          $this->config['gt_domainurl'] = $this->config['gt_domainurl'] ?? $this->$domain_url;
+          $this->config['gt_domainurl'] = $this->config['gt_domainurl'] ?? $this->domain_url;
 
           $this->gt_appid = $config['gt_appid'];
           $this->gt_appkey = $config['gt_appkey'];
@@ -86,25 +79,23 @@ class GeTui implements PushInterface
      */
     public function getInstance()
     {
-      $sObject = Cache::get(config('getui.object_class'));
-      if($sObject){
-          $object = unserialize($sObject);
-      }else{
-          $object = new \GTClient($this->config['gt_domainurl'],  $this->gt_appkey, $this->gt_appid,  $this->gt_mastersecret);
-          $sObject = serialize($object);
-          Cache::forever(config('getui.object_class'), $sObject);
-      }
-
-      return $object;
+        $sObject = Cache::get(config('getui.object_class'));
+        if($sObject){
+            $object = unserialize($sObject);
+        }else{
+            $object = new \GTClient($this->config['gt_domainurl'],  $this->gt_appkey, $this->gt_appid,  $this->gt_mastersecret);
+            $sObject = serialize($object);
+            Cache::forever(config('getui.object_class'), $sObject);
+        }
+        return $object;
     }
 
-
     /**
-      * @param $msg   ['title' => "通知标题",'content' => "通知内容" , 'payload' => "通知去干嘛这里可以自定义"]
-      * @param $to    ['device_cid' => "" , platform=""]   platform 1为ios  2为android
-      * @return mixed
-      * @throws \Exception
-      */
+     * @param $msg   ['title' => "通知标题",'content' => "通知内容" , 'payload' => "通知去干嘛这里可以自定义"]
+     * @param $to    ['device_cid' => "" , platform=""]   platform 1为ios  2为android
+     * @return mixed
+     * @throws \Exception
+     */
     public function push($msg, $to)
     {
         if (empty($to['device_cid'])) {
@@ -117,67 +108,72 @@ class GeTui implements PushInterface
 
         $client = $this->getInstance();
 
-        //设置推送参数
         $title = $msg['title'];
         $content = $msg['content'];
         $payload = $msg['payload'];
 
-
-        //设置推送参数
         $push = new \GTPushRequest();
         $osn = date('Ymd') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
         $push->setRequestId((string)$osn);
 
         $message = new \GTPushMessage();
+
+        //厂商推送消息参数
         $channel = new \GTPushChannel();
+        //通知
         $notify = new \GTNotification();
-        $thirdnotify = new \GTThirdNotification();
-        $ups = new \GTUps();
-        $gtAndroid = new \GTAndroid();
         $notify->setTitle($title);
         $notify->setBody($content);
+
         //安卓
         if($to['platform'] == 2){
-          $gtAndroid = new \GTAndroid();
 
-          $ups = new \GTUps();
-          $thirdnotify = new \GTThirdNotification();
+            $gtAndroid = new \GTAndroid();
 
-          if(is_array($payload)){
-              $pj =  json_encode($payload);
-          }else{
-              $pj = $payload;
-          }
+            $ups = new \GTUps();
+            $thirdnotify = new \GTThirdNotification();
 
-          $notify-> setPayload($pj);
-          $thirdnotify->setTitle($title);
-          $thirdnotify->setBody($content);
-          $thirdnotify-> setPayload($pj);
+            if(is_array($payload)){
+                $pj =  json_encode($payload);
+            }else{
+                $pj = $payload;
+            }
 
-          //点击通知后续动作，目前支持以下后续动作:
-          //1、intent：打开应用内特定页面url：打开网页地址。2、payload：自定义消息内容启动应用。3、payload_custom：自定义消息内容不启动应用。4、startapp：打开应用首页。5、none：纯通知，无后续动作
-          $package = config('getui.package_name');
+            $notify-> setPayload($pj);
+            $thirdnotify->setTitle($title);
+            $thirdnotify->setBody($content);
+            $thirdnotify-> setPayload($pj);
 
-          $intent = "intent:#Intent;launchFlags=0x14000000;action=android.intent.action.oppopush;component={$package}/io.dcloud.PandoraEntry;S.UP-OL-SU=true;S.title={$title};S.content={$content};S.payload={$pj};end";
-          $notify->setClickType("intent");
-          $notify->setIntent($intent);
+            $package = config('getui.package_name');
 
-          $thirdnotify->setClickType("intent");
-          $thirdnotify->setIntent($intent);
+            $intent = "intent:#Intent;launchFlags=0x14000000;action=android.intent.action.oppopush;component={$package}/io.dcloud.PandoraEntry;S.UP-OL-SU=true;S.title={$title};S.content={$content};S.payload={$pj};end";
+            $notify->setClickType("intent");
+            $notify->setIntent($intent);
 
-          $message->setNotification($notify);
-          $gtAndroid->setUps($ups);
-          $channel->setAndroid($gtAndroid);
-          $push->setPushMessage($message);
-          $push->setPushChannel( $channel );
-          $push->setCid($deviceId);
+            $thirdnotify->setClickType("intent");
+            $thirdnotify->setIntent($intent);
+
+            $notify->setIntent($intent);
+
+            $message->setNotification($notify);
+            $upsback= $ups->setNotification($thirdnotify);
+            // $upsback= $ups->setTransmission(json_encode($touchuan));//厂商透传
+
+            $gtAndroid->setUps($ups);
+            $channel->setAndroid($gtAndroid);
+            $push->setPushMessage($message);
+            $push->setPushChannel( $channel );
+            $push->setCid($to['device_cid']);
+
+        }else{
+
         }
 
         //处理返回结果
         return $client->pushApi()->pushToSingleByCid($push);
     }
 
-    public function batchPush($deviceId, array $data)
+    public function pushToApp($data=[])
     {
 
     }

@@ -11,7 +11,7 @@ class GTHttpManager
 
     static $curls = array();
 
-    private static function request($url, $data, $gzip, $method,$headers)
+    private static function request($url, $data, $gzip, $method, $headers)
     {
         if(!isset(GTHttpManager::$curls[$url])){
             $curl = curl_init($url);
@@ -25,8 +25,8 @@ class GTHttpManager
         curl_setopt($curl, CURLOPT_FRESH_CONNECT, 0);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, GTConfig::getHttpConnectionTimeOut());
         curl_setopt($curl, CURLOPT_TIMEOUT_MS, GTConfig::getHttpSoTimeOut());
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+		    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+		    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         $header = null;
         if ($headers != null){
             array_push($headers,"Content-Type:application/json;charset=UTF-8", "Connection: Keep-Alive");
@@ -79,7 +79,7 @@ class GTHttpManager
         return $result;
     }
 
-    public static function httpRequest($url, $params,$headers, $gzip = false, $method)
+    public static function httpRequest($url, $params,$headers, $gzip = false, $method='')
     {
         $data = json_encode($params);
         $result = null;
