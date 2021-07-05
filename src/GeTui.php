@@ -3,7 +3,7 @@ namespace CherryneChou\GeTui;
 
 use Illuminate\Support\Facades\Cache;
 use CherryneChou\GeTui\Contracts\PushInterface;
-  
+
 require_once dirname(__FILE__) . '/Sdk/GTClient.php';
 require_once dirname(__FILE__) . '/Sdk/request/push/GTPushMessage.php';
 require_once dirname(__FILE__) . '/Sdk/request/push/GTNotification.php';
@@ -134,7 +134,7 @@ class GeTui implements PushInterface
             $thirdnotify = new \GTThirdNotification();
 
             if(is_array($payload)){
-                $pj =  json_encode($payload);
+                $pj =  json_encode($payload,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             }else{
                 $pj = $payload;
             }
@@ -157,7 +157,9 @@ class GeTui implements PushInterface
 
             $message->setNotification($notify);
             $upsback= $ups->setNotification($thirdnotify);
-            // $upsback= $ups->setTransmission(json_encode($touchuan));//厂商透传
+            $upsback= $ups->setTransmission(json_encode($touchuan,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));//厂商透传
+
+            $upsback= $ups->setNotification($thirdnotify);
 
             $gtAndroid->setUps($ups);
             $channel->setAndroid($gtAndroid);
