@@ -116,6 +116,14 @@ class GeTui implements PushInterface
         $osn = date('Ymd') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
         $push->setRequestId((string)$osn);
 
+        $set = new \GTSettings();
+        $set->setTtl(3600000);
+
+        $strategy = new \GTStrategy();
+        $strategy->setDefault(\GTStrategy::STRATEGY_THIRD_FIRST);
+        $set->setStrategy($strategy);
+        $push->setSettings($set);
+
         $message = new \GTPushMessage();
 
         //厂商推送消息参数
@@ -154,12 +162,13 @@ class GeTui implements PushInterface
             $thirdnotify->setIntent($intent);
 
             $notify->setIntent($intent);
+            //透传 ，与通知、撤回三选一
+            $message->setTransmission(json_encode($payload,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            //$message->setNotification($notify);
+            //    $message->setRevoke($revoke);
 
-            $message->setNotification($notify);
             $upsback= $ups->setNotification($thirdnotify);
-            $upsback= $ups->setTransmission(json_encode($touchuan,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));//厂商透传
-
-            $upsback= $ups->setNotification($thirdnotify);
+            //$upsback= $ups->setTransmission(json_encode($touchuan));//厂商透传
 
             $gtAndroid->setUps($ups);
             $channel->setAndroid($gtAndroid);
